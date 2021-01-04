@@ -35,8 +35,7 @@ st.title("Cardiovascular Disease Patient Classifier")
 st.markdown("Suffering from cardiovascular disease?")
 
 
-url = "https://raw.githubusercontent.com/taylor-m/class_notebooks/main/capstone_2/cardiovascular_disease_classifier/cardiovascular_disease_prediction/cardio_train.csv"
-
+url = "https://raw.githubusercontent.com/taylor-m/cardiovascular-disease-model/main/cardio_train.csv"
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
     
