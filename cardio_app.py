@@ -39,7 +39,6 @@ url = "https://raw.githubusercontent.com/taylor-m/cardiovascular-disease-model/m
 raw_df = pd.read_csv(url, sep=";", index_col="id")
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
-@st.cache(suppress_st_warning=True)
 
 # checkbox for loading data
 @st.cache(persist=True)
@@ -335,7 +334,7 @@ def lr_model(X_train, X_test, y_train, y_test):
     return lr_pipeline_cv, lr_best_params, lr_train_score, lr_test_score, lr_pred_prob, lr_prob_true, lr_prob_pred, lr_preds_df, lr_class_report, lr_f_negs, lr_pred_hist
 
 
-@st.cache
+@st.cache(suppress_st_warning=True)
 def num_plot(stat):
     feat = df[stat]
     feat1 = df[df.disease == 1][stat]
@@ -358,7 +357,7 @@ def autolabel(rects):
                     textcoords="offset points",
                     ha='center', va='bottom')
     
-@st.cache
+@st.cache(suppress_st_warning=True)
 def cat_plot(stat):
     feat = df[stat]
     feat1 = df[df.disease == 1][stat].value_counts()
