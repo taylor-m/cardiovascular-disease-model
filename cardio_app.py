@@ -494,7 +494,7 @@ if option == "Model":
     model = st.sidebar.radio("Model type:", ("Classification", "Prediction"), key="model")
     if model == "Classification":
         # multiselect for model results visualization options for the xgboost model
-        metrics = st.sidebar.multiselect("Classifier Visualization:", ('Confusion Matrix', 'Precision-Recall Curve', 'Feature Importances', 'Prediction Distribution'), key="xgb_metric")
+        metrics = st.sidebar.multiselect("Classifier Visualization:", ('Confusion Matrix', 'Precision-Recall Curve', 'Feature Importances', 'Prediction Distribution', 'Calibration Curve'), key="xgb_metric")
         if st.sidebar.button("Run", False):
             
             # xgboost train test split
