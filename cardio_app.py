@@ -254,7 +254,7 @@ def xgboost(X_train, X_test, y_train, y_test):
     prob_true, prob_pred = calibration_curve(y_test, pred_prob[:, 1], n_bins=10)
     
 
-    return train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv, pred_prob,  prob_true
+    return train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv, prob_pred,  prob_true
 
 def lr_model(X_train, X_test, y_train, y_test):
     # categorical columns to be encoded
