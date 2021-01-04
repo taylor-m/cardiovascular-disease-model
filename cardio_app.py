@@ -172,14 +172,14 @@ def plot_metric(metric):
     if metric  == "Prediction Distribution":
         st.subheader("Prediction Probability Distribution")
         fig, ax = plt.subplots()
-        pred_dist
+        sns.distplot(preds_df.pred_prob)
         st.pyplot()
         
     if metric == "Calibration Curve":
         st.subheader("Calibration Curve")
         fig, ax = plt.subplots()
-        ax.plot(lr_prob_pred, lr_prob_true, "-o")
-        st.pyplot()
+        plt.plot(prob_pred, prob_true, "-o")
+        st.pyplot(fig)
         
 #     if metric == "False Negative Analysis":
 #         st.subheader("False Negative Analysis")
@@ -251,7 +251,10 @@ def xgboost(X_train, X_test, y_train, y_test):
         "pred_prob", ascending=False
     )
 
-    return train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv
+    prob_true, prob_pred = calibration_curve(y_test, pred_prob[:, 1], n_bins=10)
+    
+
+    return train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv, pred_prob,  prob_true
 
 def lr_model(X_train, X_test, y_train, y_test):
     # categorical columns to be encoded
@@ -496,9 +499,9 @@ if option == "Model":
             
             # xgboost train test split
             X_train, X_test, y_train, y_test = xgb_split(df)
-            train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv = xgboost(X_train, X_test, y_train, y_test)
+            train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv, pred_prob, prob_true = xgboost(X_train, X_test, y_train, y_test)
             y_preds = preds_df.y_preds
-            pred_dist = preds_df.pred_prob.hist()
+            prob_pred = preds_df.pred_prob
             st.subheader("XGBoost Classifier Model Results")
             st.write("Accuracy: ", train_score.round(2)*100,"%")
             st.write("Precision: ", precision_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2))
@@ -511,7 +514,7 @@ if option == "Model":
         X_train, X_test, y_train, y_test = lr_split(df)
 
         # lr model return vars
-        lr_pipeline_cv, lr_best_params, lr_train_score, lr_test_score, lr_pred_prob, lr_prob_true, lr_prob_pred, lr_preds_df, lr_class_report, lr_f_negs, lr_pred_hist = lr_model(X_train, X_test, y_train, y_test)
+        lr_pipeline_cv, lr_best_params, lr_train_score, lr_test_score, pred_prob, prob_true, lr_prob_pred, preds_df, lr_class_report, lr_f_negs, lr_pred_hist = lr_model(X_train, X_test, y_train, y_test)
         if mode == "model performance":
             metrics = st.sidebar.multiselect("Predictor Performance:", ('Confusion Matrix', 'Precision-Recall Curve', 'Prediction Distribution', 'Calibration Curve'), key="lr_metric")
             if st.sidebar.button("Run", False):
@@ -519,11 +522,11 @@ if option == "Model":
                 st.subheader("Logistic Regression Model Results")
                 
                 pipeline_cv = lr_pipeline_cv
-                y_preds = lr_preds_df.y_preds
+                y_preds = preds_df.y_preds
                 f_negs = lr_f_negs
                 st.write("Accuracy: ", lr_train_score.round(2)*100,"%")
-                st.write("Precision: ", precision_score(lr_preds_df.y_true, lr_preds_df.y_preds, labels=class_names).round(2))
-                st.write("Recall: ", recall_score(lr_preds_df.y_true, lr_preds_df.y_preds, labels=class_names).round(2))
+                st.write("Precision: ", precision_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2))
+                st.write("Recall: ", recall_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2))
         
                 for metric in metrics:
                     fig, ax = plt.subplots()
