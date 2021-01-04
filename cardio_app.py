@@ -334,7 +334,7 @@ def lr_model(X_train, X_test, y_train, y_test):
     return lr_pipeline_cv, lr_best_params, lr_train_score, lr_test_score, lr_pred_prob, lr_prob_true, lr_prob_pred, lr_preds_df, lr_class_report, lr_f_negs, lr_pred_hist
 
 
-# @st.cache
+@st.cache
 def num_plot(stat):
     feat = df[stat]
     feat1 = df[df.disease == 1][stat]
@@ -357,7 +357,7 @@ def autolabel(rects):
                     textcoords="offset points",
                     ha='center', va='bottom')
     
-# @st.cache
+@st.cache
 def cat_plot(stat):
     feat = df[stat]
     feat1 = df[df.disease == 1][stat].value_counts()
