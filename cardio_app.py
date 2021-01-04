@@ -35,8 +35,7 @@ st.title("Cardiovascular Disease Patient Classifier")
 st.markdown("Suffering from cardiovascular disease?")
 
 
-path = "cardiovascular_disease_prediction/cardio_train.csv"
-raw_df = pd.read_csv(path, sep=";", index_col="id")
+url = "https://raw.githubusercontent.com/taylor-m/class_notebooks/main/capstone_2/cardiovascular_disease_classifier/cardiovascular_disease_prediction/cardio_train.csv"
 
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
@@ -45,7 +44,7 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 @st.cache(persist=True)
 def load_data():
     # dataset file info
-    data = pd.read_csv(path, sep=";", index_col="id")
+    data = pd.read_csv(url, sep=";", index_col="id")
 
     # new column name mapping
     mapping = {
