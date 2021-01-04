@@ -36,6 +36,7 @@ st.markdown("Suffering from cardiovascular disease?")
 
 
 url = "https://raw.githubusercontent.com/taylor-m/cardiovascular-disease-model/main/cardio_train.csv"
+raw_df = pd.read_csv(url, sep=";", index_col="id")
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
 @st.cache(suppress_st_warning=True)
