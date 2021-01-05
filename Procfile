@@ -1,1 +1,1 @@
-web: gunicorn cardio_app.py:app
+web: gunicorn cardio-disease-model:app
