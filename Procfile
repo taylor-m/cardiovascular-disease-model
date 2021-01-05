@@ -1,1 +1,1 @@
-web: gunicorn cardioapp.wsgi
+web: gunicorn cardio_app.py:app
