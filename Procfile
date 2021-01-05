@@ -1,1 +1,1 @@
-web: gunicorn cardio_app:app --log-file=-
+web: gunicorn cardio_app:app
