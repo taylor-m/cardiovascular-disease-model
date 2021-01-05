@@ -566,8 +566,8 @@ def main():
                 y_preds = preds_df.y_preds
                 st.subheader("XGBoost Classifier Model Results")
                 st.write("Accuracy: ", train_score.round(2) * 100, "%")
-                st.write("Precision: ", precision_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2))
-                st.write("Recall: ", recall_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2))
+                st.write("Precision: ", precision_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2), "%")
+                st.write("Recall: ", recall_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2), "%")
                 for metric in metrics:
                     fig, ax = plt.subplots()
                     plot_metric(metric, prob_pred, y_test, pred_prob)
@@ -592,8 +592,8 @@ def main():
                     f_negs = lr_f_negs
                     st.write("Accuracy: ", lr_train_score.round(2) * 100, "%")
                     st.write("Precision: ",
-                             precision_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2))
-                    st.write("Recall: ", recall_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2))
+                             precision_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2), "%")
+                    st.write("Recall: ", recall_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2), "%")
 
                     for metric in metrics:
                         fig, ax = plt.subplots()
