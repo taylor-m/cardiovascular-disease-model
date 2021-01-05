@@ -1,1 +1,1 @@
-web: gunicorn cardio_app:app --preload --workers 1
+web: gunicorn streamlit run cardio_app.py
