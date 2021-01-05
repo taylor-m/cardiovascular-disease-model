@@ -9,3 +9,4 @@ setuptools~=51.1.1
 gunicorn~=20.0.4
 category_encoders~=2.2.2
 ds-functions-pkg~=0.3.0
+seaborn~=0.10.1
