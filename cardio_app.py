@@ -31,7 +31,7 @@ def main():
     st.set_option('deprecation.showPyplotGlobalUse', False)
 
     # checkbox for loading data
-    @st.cache()
+    @st.cache
     def load_data():
         # dataset file info
         data = pd.read_csv(url, sep=";", index_col="id")
