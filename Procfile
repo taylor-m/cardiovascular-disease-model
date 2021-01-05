@@ -1,1 +1,1 @@
-web: gunicorn cardio-disease-model:app
+web: gunicorn cardio_app:app --preload --workers 1
