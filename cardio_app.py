@@ -4,8 +4,10 @@ from matplotlib import pyplot as plt
 import plotly
 import seaborn as sns
 from scipy import stats
-
+import plotly.graph_objects as go
 # plt.style.use(["dark_background"])
+import plotly.figure_factory as ff
+import plotly.express as px
 
 from sklearn.svm import SVC
 from xgboost import XGBClassifier
@@ -17,7 +19,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from functions_pkg import print_vif, predictions_df
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, precision_recall_curve, average_precision_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import (
     plot_confusion_matrix,
@@ -41,7 +43,7 @@ raw_df = pd.read_csv(url, sep=";", index_col="id")
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
 # checkbox for loading data
-@st.cache(persist=True)
+@st.cache()
 def load_data():
     # dataset file info
     data = pd.read_csv(url, sep=";", index_col="id")
@@ -133,7 +135,7 @@ def lr_split(df):# Split the data to 'train and test' sets
             "height_ft",
             "bp_diff",
             "weight_lbs",
-            "active",
+#             "active",
             #     "bmi",
             #     "height",
             #     "weight",
@@ -144,11 +146,12 @@ def lr_split(df):# Split the data to 'train and test' sets
         y = df.disease
 
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=28, stratify=df.disease
+            X, y, test_size=0.5, random_state=28, stratify=df.gender 
+            # stratification of the data on gender increases the predictive accuracy of the logistic regression model because the data is unbalanced towards women; ~2/3 women 1/3 men
         )
         return X_train, X_test, y_train, y_test
 
-def plot_metric(metric):
+def plot_metric(metric, prob_pred, y_test, pred_prob):
     if metric == 'Confusion Matrix':
         st.subheader("Confusion Matrix")
         plot_confusion_matrix(pipeline_cv, X_test, y_test, display_labels=class_names)
@@ -156,8 +159,25 @@ def plot_metric(metric):
 
     if metric == 'Precision-Recall Curve':
         st.subheader('Precision-Recall Curve')
-        plot_precision_recall_curve(pipeline_cv, X_test, y_test)
-        st.pyplot()
+#         plot_precision_recall_curve(pipeline_cv, X_test, y_test)
+#         st.pyplot()
+        
+        fig = go.Figure()
+        
+        precision, recall, _ = precision_recall_curve(y_test, pred_prob[:, 1])
+        auc_score = average_precision_score(y_test, pred_prob[:, 1])
+
+        name = f"AP={auc_score:.2f})"
+        fig.add_trace(go.Scatter(x=recall, y=precision, name=name, mode='lines'))
+        fig.update_layout(
+            xaxis_title='Recall',
+            yaxis_title='Precision',
+#             yaxis=dict(scaleanchor="x", scaleratio=True),
+            xaxis=dict(constrain='domain'),
+            width=700, height=500,
+            yaxis_range=[0.49,1],
+        )
+        st.plotly_chart(fig)
         
     if metric == "Feature Importances":
         st.subheader("Feature Importance")
@@ -171,15 +191,31 @@ def plot_metric(metric):
     
     if metric  == "Prediction Distribution":
         st.subheader("Prediction Probability Distribution")
-        fig, ax = plt.subplots()
-        sns.distplot(preds_df.pred_prob)
-        st.pyplot()
+#         fig, ax = plt.subplots()
+#         sns.distplot(preds_df.pred_prob)
+#         st.pyplot()
+        
+        fig = px.histogram(preds_df.pred_prob, )
+        st.plotly_chart(fig)
         
     if metric == "Calibration Curve":
-        st.subheader("Calibration Curve")
-        fig, ax = plt.subplots()
-        plt.plot(prob_pred, prob_true, "-o")
-        st.pyplot(fig)
+#         fig, ax = plt.subplots()
+#         plt.plot(prob_pred, prob_true, "-o")
+#         st.pyplot(fig)
+        
+        # Create traces
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(x=prob_pred, y=prob_true, mode="lines", name="Calibration Curve")
+        )
+        # Edit the layout
+        fig.update_layout(title='Calibration Curve',
+                           xaxis_title='Prediction Probability',
+                           yaxis_title='True Probability',
+#                            yaxis_range=[0,1],
+#                            xaxis_range=[0,1]
+                         )
+        st.plotly_chart(fig)
         
 #     if metric == "False Negative Analysis":
 #         st.subheader("False Negative Analysis")
@@ -254,7 +290,7 @@ def xgboost(X_train, X_test, y_train, y_test):
     prob_true, prob_pred = calibration_curve(y_test, pred_prob[:, 1], n_bins=10)
     
 
-    return train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv, prob_pred,  prob_true
+    return train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv, prob_pred,  prob_true, pred_prob
 
 def lr_model(X_train, X_test, y_train, y_test):
     # categorical columns to be encoded
@@ -337,18 +373,44 @@ def lr_model(X_train, X_test, y_train, y_test):
     return lr_pipeline_cv, lr_best_params, lr_train_score, lr_test_score, lr_pred_prob, lr_prob_true, lr_prob_pred, lr_preds_df, lr_class_report, lr_f_negs, lr_pred_hist
 
 
-@st.cache(suppress_st_warning=True)
+# @st.cache(suppress_st_warning=True)
 def num_plot(stat):
+    
     feat = df[stat]
     feat1 = df[df.disease == 1][stat]
     feat0 = df[df.disease == 0][stat]
-    fig, ax = plt.subplots()
-    sns.distplot(feat1, color='#b51616', label='Disease')
-    sns.distplot(feat0, color='#0bbd1a', label='No Disease')
-    ax.set_xlabel(stat)
-    ax.set_title(f"{stat} Distribution")
-    ax.legend()
-    st.pyplot(fig)
+
+    fig = go.Figure()
+    bins = 150
+    # 1st histogram, disease
+    fig.add_trace(go.Histogram(
+        x=feat1,
+        histnorm='',
+        name='Disease',
+        marker_color='#b51616',
+        nbinsx=bins,
+    ))
+    # 2nd histogram, no disease
+    fig.add_trace(go.Histogram(
+        x=feat0,
+        histnorm='',
+        name='No Disease',
+        marker_color='#0bbd1a',
+        nbinsx=bins,
+    ))
+    if stat == 'age':
+        bins = 30
+   
+    # Overlay both histograms
+    fig.update_layout(
+        barmode='overlay',
+        xaxis_title=stat,
+        width=1000,
+        height=700,
+    )
+    # Reduce opacity to see both histograms
+    fig.update_traces(opacity=0.75)
+    st.plotly_chart(fig)
 
 def autolabel(rects):
     """Attach a text label above each bar in *rects*, displaying its height."""
@@ -360,42 +422,90 @@ def autolabel(rects):
                     textcoords="offset points",
                     ha='center', va='bottom')
     
-@st.cache(suppress_st_warning=True)
+# @st.cache(suppress_st_warning=True)
 def cat_plot(stat):
     feat = df[stat]
     feat1 = df[df.disease == 1][stat].value_counts()
     feat0 = df[df.disease == 0][stat].value_counts()
-#     d = {'no_disease':feat0, 'disease':feat1}
-#     f = pd.DataFrame(data=d)
-    fig, ax = plt.subplots()
-#     st.write(f.style.background_gradient())
-    fig, ax = plt.subplots()
-    width = 0.25
-    cd = ax.bar(x=feat1.index-width/2, height=feat1, width=width, color='#e60909', label='Disease')
-    no_cd = ax.bar(x=feat0.index+width/2, height=feat0, width=width, color='#09e648', label='No Disease')
+
+    intervals = list(feat.unique())
+
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                name="Disease", 
+                x=intervals, 
+                y=list(feat1),
+                marker_color='#b51616',
+            ),
+            go.Bar(
+                name="No Disease", 
+                x=intervals, 
+                y=list(feat0),
+                marker_color='#0bbd1a',
+            )
+        ]
+    )
+    fig.update_traces(
+        hovertemplate='%{y:.0f}'
+    )
+    # Change the bar mode
+    fig.update_layout(
+        barmode="group", 
+        title_text=f"{stat} Distribution", 
+        xaxis_title=f"{stat}",
+        width=1000,
+        height=700,
+    )
+    st.plotly_chart(fig)
     
-    # Attach a text label above each bar in *rects*, displaying its height
-    for rect in cd:
-        height = rect.get_height()
-        ax.annotate('{}'.format(height),
-                    xy=(rect.get_x() + rect.get_width() / 2, height),
-                    xytext=(0, 3),  # 3 points vertical offset
-                    textcoords="offset points",
-                    ha='center', va='bottom')
-    for rect in no_cd:
-        height = rect.get_height()
-        ax.annotate('{}'.format(height),
-                    xy=(rect.get_x() + rect.get_width() / 2, height),
-                    xytext=(0, 3),  # 3 points vertical offset
-                    textcoords="offset points",
-                    ha='center', va='bottom')
-        
-    ax.set_xlabel(stat)
-    ax.set_xticks(feat.unique())
-    ax.set_title(f"{stat}")
-    ax.legend()
-    fig.tight_layout()
-    st.pyplot(fig)
+def v_plot(stat):
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Violin(
+            x=df["gender"][df["disease"] == 0],  # no disease
+            y=df[stat][df["disease"] == 0],
+            x0='Female',
+            legendgroup="No Disease",
+            scalegroup="Yes",
+            name="No Disease",
+            side="negative",
+            fillcolor="#09e648",
+            line_color='#07591f',
+            points=False,
+        )
+    )
+    fig.add_trace(
+        go.Violin(
+            x=df["gender"][df["disease"] == 1],
+            y=df[stat][df["disease"] == 1],
+            x0='Male',
+            legendgroup="Disease",
+            scalegroup="Disease",
+            name="Disease",
+            side="positive",
+            line_color="#e60909",
+            points=False,
+        )
+    )
+    fig.update_traces(meanline_visible=True)
+    fig.update_layout(violingap=0.01, 
+                      violinmode="overlay", 
+                      autosize= True, 
+                      width=1200, 
+                      height=700, 
+                      xaxis=dict(
+                            tickvals=[-1, 0, 1, 2],
+                            tickmode="array",
+                            titlefont=dict(size=30),
+                        )
+     )
+    fig.update_xaxes(automargin=True, range=(-0.5, 1.5))
+    st.plotly_chart(fig)
+    
+    
+    
     
 df = load_data()
 
@@ -439,56 +549,23 @@ if option == "Data Info":
     st.write("13. bp_diff [bp_hi - bp_lo]")
     st.write("14. bmi [body mass index]")
 
-num_cols = ["bp_lo", "bp_hi", "bp_diff", "bmi", "height", "weight", "age", "height_ft", "yrs", "weight_lbs"]
+num_cols = ["bp_lo", "bp_hi", "bp_diff", "bmi", "height", "weight", "age"]
 
 if option == "Feature Var Plots":
-    st.subheader("By the numbers:")
-    st.write("View numbers of samples within each variable and their distributions by disease class and gender")
+    st.subheader("Variable/Group Visualization:")
     st.sidebar.subheader("Variables")
-    age = st.sidebar.checkbox("age", False, key="age")
-    gender = st.sidebar.checkbox("gender", False)
-    height = st.sidebar.checkbox("height", False)
-    weight = st.sidebar.checkbox("weight", False)
-    bp = st.sidebar.checkbox("blood pressure", False)
-    cholesterol = st.sidebar.checkbox("cholesterol", False)
-    glucose = st.sidebar.checkbox("glucose", False)
-    smoke = st.sidebar.checkbox("smoke", False)
-    alcohol = st.sidebar.checkbox("alcohol", False)
-    active = st.sidebar.checkbox("active", False)
-    bmi = st.sidebar.checkbox("bmi", False)
-    disease = st.sidebar.checkbox("disease", False)
-    if st.sidebar.button("Plot", key="plot"):                        
-        if age:
-            num_plot("age")
-        if gender:
-            cat_plot("gender")
-        if height:
-            num_plot("height")
-        if weight:
-            num_plot("weight")    
-        if bp:
-            fig, axs = plt.subplots(2,1)
-            sns.catplot(x="gender", y="bp_hi", hue="disease", kind="violin", split=True, data=df)
-            st.pyplot()
-            sns.catplot(x="gender", y="bp_lo", hue="disease", kind="violin", split=True, data=df)
-            st.pyplot()
-            sns.catplot(x="gender", y="bp_diff", hue="disease", kind="violin", split=True, data=df)
-            st.pyplot()
+    plot_var = st.sidebar.selectbox("Variable", ("age", "gender", "height", "weight", "bp_hi", "bp_lo", "cholesterol", "glucose", "smoke", "alcohol", "active", "bmi", "disease"), key='plot_var')
+    if plot_var in num_cols:
+        plot_type = st.sidebar.radio("plot type", ("hist", "violin"), key='var_plot_type')
+    if st.sidebar.button("Plot Var", False):
+        if plot_var in num_cols:
+            if plot_type == 'hist':
+                num_plot(plot_var)
+            else:
+                v_plot(plot_var)
+        else:
+            cat_plot(plot_var)
 
-        if cholesterol:
-            cat_plot("cholesterol") 
-        if glucose:
-            cat_plot("glucose")    
-        if smoke:
-            cat_plot("smoke")
-        if alcohol:
-            cat_plot("alcohol")
-        if active:
-            cat_plot("active")    
-        if bmi:
-            num_plot("bmi")    
-        if disease:
-            cat_plot("disease")     
     
 if option == "Model":
     model = st.sidebar.radio("Model type:", ("Classification", "Prediction"), key="model")
@@ -499,22 +576,21 @@ if option == "Model":
             
             # xgboost train test split
             X_train, X_test, y_train, y_test = xgb_split(df)
-            train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv, pred_prob, prob_true = xgboost(X_train, X_test, y_train, y_test)
+            train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv, prob_pred, prob_true, pred_prob = xgboost(X_train, X_test, y_train, y_test)
             y_preds = preds_df.y_preds
-            prob_pred = preds_df.pred_prob
             st.subheader("XGBoost Classifier Model Results")
             st.write("Accuracy: ", train_score.round(2)*100,"%")
             st.write("Precision: ", precision_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2))
             st.write("Recall: ", recall_score(preds_df.y_true, preds_df.y_preds, labels=class_names).round(2))
             for metric in metrics:
                 fig, ax = plt.subplots()
-                plot_metric(metric)
+                plot_metric(metric, prob_pred, y_test, pred_prob)
     if model == "Prediction":
         mode = st.sidebar.radio("Prediction Model Options", ("model performance", "disease probability"), key="lr_options")
         X_train, X_test, y_train, y_test = lr_split(df)
 
         # lr model return vars
-        lr_pipeline_cv, lr_best_params, lr_train_score, lr_test_score, pred_prob, prob_true, lr_prob_pred, preds_df, lr_class_report, lr_f_negs, lr_pred_hist = lr_model(X_train, X_test, y_train, y_test)
+        lr_pipeline_cv, lr_best_params, lr_train_score, lr_test_score, lr_pred_prob, prob_true, prob_pred, preds_df, lr_class_report, lr_f_negs, lr_pred_hist = lr_model(X_train, X_test, y_train, y_test)
         if mode == "model performance":
             metrics = st.sidebar.multiselect("Predictor Performance:", ('Confusion Matrix', 'Precision-Recall Curve', 'Prediction Distribution', 'Calibration Curve'), key="lr_metric")
             if st.sidebar.button("Run", False):
@@ -530,7 +606,7 @@ if option == "Model":
         
                 for metric in metrics:
                     fig, ax = plt.subplots()
-                    plot_metric(metric)
+                    plot_metric(metric, prob_pred, y_test, lr_pred_prob)
                     
         if mode == "disease probability":
             st.subheader('Cardiovascular Disease Probability Prediction')
@@ -570,18 +646,25 @@ if option == "Model":
             glu = st.slider('glucose', min_value=0, max_value=2)
 
             # smoke
-            smk = st.radio('smoke?', ['yes', 'no'])
+            smk = st.radio('smoke?', ['no', 'yes'])
             if smk == 'yes':
                 smk = 1
             else:
                 smk = 0
             
             # alcohol
-            alc = st.radio('drink alcohol regularly?', ['yes', 'no'])
+            alc = st.radio('drink alcohol regularly?', ['no', 'yes'])
             if alc == 'yes':
                 alc = 1
             else:
                 alc = 0
+            # alcohol
+            act = st.radio('Physically active?', ['no', 'yes'])
+            if act == 'yes':
+                act = 1
+            else:
+                act = 0
+            
             # bmi
             bmi = wt/((ht/100)**2)
 
@@ -597,6 +680,7 @@ if option == "Model":
                 'glucose': [glu],
                 'smoke': [smk],
                 'alcohol': [alc],
+                'active': [act],
                 'bmi': [bmi],
             }
             X_input = pd.DataFrame(X_input)
