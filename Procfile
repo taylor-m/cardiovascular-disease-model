@@ -1,1 +1,1 @@
-web: gunicorn cardio_app:app --preload --workers 1
+web: gunicorn cardio_app:application --preload --workers 1
