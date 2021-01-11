@@ -1,4 +1,4 @@
-# cardiovascular disease model
+# Cardiovascular Disease Classification & Predictive Models
  machine learning model to predict and classify cardiovascular disease
 ## Overview
 The cardiovascular disease model is a machine learning model that aims to classify and predict the probability of 

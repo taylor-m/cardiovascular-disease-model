@@ -443,6 +443,10 @@ def main():
             width=1000,
             height=700,
         )
+        fig.update_xaxes(
+            tickvals=[0,1],
+            ticktext=["Female", "Male"],
+        )
         st.plotly_chart(fig)
 
     def v_plot(stat):
@@ -483,9 +487,11 @@ def main():
                           height=700,
                           xaxis=dict(
                               tickvals=[-1, 0, 1, 2],
+                              ticktext=["", "Female", "Male", ""],
                               tickmode="array",
                               titlefont=dict(size=30),
-                          )
+                          ),
+                          xaxis_title = f"{stat}",
                           )
         fig.update_xaxes(automargin=True, range=(-0.5, 1.5))
         st.plotly_chart(fig)
