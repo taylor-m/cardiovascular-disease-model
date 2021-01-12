@@ -410,9 +410,15 @@ def main():
 
     # @st.cache(suppress_st_warning=True)
     def cat_plot(stat):
-        feat = df[stat]
-        feat1 = df[df.disease == 1][stat].value_counts()
-        feat0 = df[df.disease == 0][stat].value_counts()
+
+        if stat == 'disease':
+            feat = df[stat]
+            feat1 = df[df.disease == 1]['gender'].value_counts()
+            feat0 = df[df.disease == 0]['gender'].value_counts()
+        else:
+            feat = df[stat]
+            feat1 = df[df.disease == 1][stat].value_counts()
+            feat0 = df[df.disease == 0][stat].value_counts()
 
         intervals = list(feat.unique())
 
