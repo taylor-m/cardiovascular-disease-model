@@ -103,7 +103,7 @@ def main():
             "active",
             #     "bmi",
             #         "height",
-            #     "weight",
+            "weight",
         ]
 
         X = df.drop(columns=drop_cols)
@@ -126,7 +126,7 @@ def main():
             #             "active",
             #     "bmi",
             #     "height",
-            #     "weight",
+                "weight",
         ]
 
         # train test split of data
@@ -221,7 +221,7 @@ def main():
         # data preprocessing
         preprocessing = ColumnTransformer(
             [
-                ("encode_cats", LeaveOneOutEncoder(), cat_cols),
+                # ("encode_cats", LeaveOneOutEncoder(), cat_cols),
             ],
             remainder="passthrough",
         )
@@ -287,8 +287,8 @@ def main():
         # numeric columns
         num_cols = [
             "age",
-            #     "height",
-            "weight",
+                "height",
+            # "weight",
             "bp_hi",
             "bp_lo",
         ]
@@ -422,6 +422,19 @@ def main():
 
         intervals = list(feat.unique())
 
+        if stat == 'gender':
+            tick_vals = [0, 1]
+            tick_text = ["Male", "Female"]
+        elif stat == 'disease':
+            tick_vals = [0, 1]
+            tick_text = ["Female", "Male"]
+        else:
+            tick_vals = intervals
+            for i in range(len(intervals)):
+                intervals[i] = str(intervals[i])
+            tick_text = intervals
+
+
         fig = go.Figure(
             data=[
                 go.Bar(
@@ -450,8 +463,8 @@ def main():
             height=700,
         )
         fig.update_xaxes(
-            tickvals=[0,1],
-            ticktext=["Female", "Male"],
+            tickvals= tick_vals,
+            ticktext= tick_text,
         )
         st.plotly_chart(fig)
 
