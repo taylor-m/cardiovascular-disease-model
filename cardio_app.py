@@ -604,9 +604,7 @@ def main():
                     fig, ax = plt.subplots()
                     plot_metric(metric, prob_pred, y_test, pred_prob)
                 st.write("hyperparameters:")
-                st.write("=====================")
-                st.write(best_params)
-                st.write("=====================")
+                st.text(best_params)
                 toc = time.perf_counter()
                 st.write(f"Runtime: {toc - tic:0.4f}s")
                 
@@ -641,9 +639,7 @@ def main():
                         fig, ax = plt.subplots()
                         plot_metric(metric, prob_pred, y_test, lr_pred_prob)
                     st.write("hyperparameters:")
-                    st.write("=====================")
-                    st.write(lr_best_params)
-                    st.write("=====================")
+                    st.text(lr_best_params)
                     toc = time.perf_counter()
                     st.write(f"Runtime: {toc - tic:0.4f}s")
 
