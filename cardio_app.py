@@ -111,7 +111,9 @@ def main():
         y = df.disease
 
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=28, stratify=df.disease
+            X, y, test_size=0.1, 
+            # random_state=28, 
+            stratify=df.disease
         )
         return X_train, X_test, y_train, y_test
 
@@ -135,7 +137,9 @@ def main():
         y = df.disease
 
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=28, stratify=df.gender
+            X, y, test_size=0.2, 
+            # random_state=28, 
+            stratify=df.gender
             # stratification of the data on gender increases the predictive accuracy of the logistic regression model
             # because the data is unbalanced towards women; ~2/3 women 1/3 men
         )
