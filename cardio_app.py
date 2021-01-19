@@ -283,7 +283,7 @@ def main():
 
         prob_true, prob_pred = calibration_curve(y_test, pred_prob[:, 1], n_bins=10)
 
-        return train_score, best_params, test_score, features, preds_df, class_report, f_negs, pipeline_cv, prob_pred, prob_true, pred_prob
+        return train_score, test_score, best_params, features, preds_df, class_report, f_negs, pipeline_cv, prob_pred, prob_true, pred_prob
 
     def lr_model(X_train, X_test, y_train, y_test):
         # categorical columns to be encoded
