@@ -19,6 +19,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
+import time
 
 
 def main():
@@ -583,6 +584,8 @@ def main():
                 'Calibration Curve', 'Confusion Matrix', 'Precision-Recall Curve', 'Feature Importances',
                 'Prediction Distribution'), key="xgb_metric")
             if st.sidebar.button("Run", False):
+                # timer for model run time
+                tic = time.perf_counter()
 
                 # xgboost train test split
                 X_train, X_test, y_train, y_test = xgb_split(df)
@@ -596,7 +599,10 @@ def main():
                 for metric in metrics:
                     fig, ax = plt.subplots()
                     plot_metric(metric, prob_pred, y_test, pred_prob)
+                toc = time.perf_counter()
+                st.write(f"Runtime: {toc - tic:0.4f}s")
         if model == "Prediction":
+            # tic = time.perf_counter()
             mode = st.sidebar.radio("Prediction Model Options", ("model performance", "disease probability"),
                                     key="lr_options")
             X_train, X_test, y_train, y_test = lr_split(df)
@@ -604,12 +610,14 @@ def main():
             # lr model return vars
             lr_pipeline_cv, lr_best_params, lr_train_score, lr_test_score, lr_pred_prob, prob_true, prob_pred, preds_df, lr_class_report, lr_f_negs, lr_pred_hist = lr_model(
                 X_train, X_test, y_train, y_test)
+            # toc = time.perf_counter()
+            # st.write(f"Runtime: {toc - tic:0.4f}s")
             if mode == "model performance":
                 metrics = st.sidebar.multiselect("Predictor Performance:", (
                     'Confusion Matrix', 'Precision-Recall Curve', 'Prediction Distribution', 'Calibration Curve'),
                                                  key="lr_metric")
                 if st.sidebar.button("Run", False):
-
+                    tic = time.perf_counter()
                     st.subheader("Logistic Regression Model Results")
 
                     pipeline_cv = lr_pipeline_cv
@@ -623,6 +631,8 @@ def main():
                     for metric in metrics:
                         fig, ax = plt.subplots()
                         plot_metric(metric, prob_pred, y_test, lr_pred_prob)
+                    toc = time.perf_counter()
+                    st.write(f"Runtime: {toc - tic:0.4f}s")
 
             if mode == "disease probability":
                 st.subheader('Cardiovascular Disease Probability Prediction')
@@ -689,7 +699,7 @@ def main():
                     'age': [age],
                     'gender': [gender],
                     'height': [ht],
-                    'weight': [wt],
+                    # 'weight': [wt],
                     'bp_hi': [bp_hi],
                     'bp_lo': [bp_lo],
                     'cholesterol': [chol],
@@ -699,15 +709,18 @@ def main():
                     'active': [act],
                     'bmi': [bmi],
                 }
-                X_input = pd.DataFrame(X_input)
-                X_input = X_input.set_index('id')
-                input_prob = lr_pipeline_cv.predict_proba(X_input)
-                disease_prob = input_prob[0, 1]
+
                 if st.button("Predict", False):
+                    tic = time.perf_counter()
+                    X_input = pd.DataFrame(X_input)
+                    X_input = X_input.set_index('id')
+                    input_prob = lr_pipeline_cv.predict_proba(X_input)
+                    disease_prob = input_prob[0, 1]
                     st.subheader('Input data')
                     st.dataframe(X_input)
                     st.write("Cardiovascular disease probability: ", disease_prob.round(2) * 100, "%")
-
+                    toc = time.perf_counter()
+                    st.write(f"Runtime: {toc - tic:0.4f}s")
 
 if __name__ == '__main__':
     main()
