@@ -603,8 +603,13 @@ def main():
                 for metric in metrics:
                     fig, ax = plt.subplots()
                     plot_metric(metric, prob_pred, y_test, pred_prob)
+                st.write("hyperparameters:")
+                st.write("=====================")
+                st.write(best_params)
+                st.write("=====================")
                 toc = time.perf_counter()
                 st.write(f"Runtime: {toc - tic:0.4f}s")
+                
         if model == "Prediction":
             # tic = time.perf_counter()
             mode = st.sidebar.radio("Prediction Model Options", ("model performance", "disease probability"),
@@ -635,6 +640,10 @@ def main():
                     for metric in metrics:
                         fig, ax = plt.subplots()
                         plot_metric(metric, prob_pred, y_test, lr_pred_prob)
+                    st.write("hyperparameters:")
+                    st.write("=====================")
+                    st.write(lr_best_params)
+                    st.write("=====================")
                     toc = time.perf_counter()
                     st.write(f"Runtime: {toc - tic:0.4f}s")
 
