@@ -656,7 +656,7 @@ def main():
                 save_class_runtime(rt)
                 st.write(f"Runtime: {rt:0.4f}s")
                 rt_avg = avg_runtime()
-            st.sidebar.write(f"runtime avg: {rt_avg:0.4f}")
+            st.sidebar.write(f"runtime avg: {rt_avg:0.4f}s")
                 
         if model == "Prediction":
             # tic = time.perf_counter()
@@ -697,7 +697,7 @@ def main():
                     save_pred_runtime(rt)
                     st.write(f"Runtime: {rt:0.4f}s")
                     rt_avg = avg_runtime('pred')
-                st.sidebar.write(f"runtime avg: {rt_avg:0.4f}")
+                st.sidebar.write(f"runtime avg: {rt_avg:0.4f}s")
 
             if mode == "disease probability":
                 st.subheader('Cardiovascular Disease Probability Prediction')
