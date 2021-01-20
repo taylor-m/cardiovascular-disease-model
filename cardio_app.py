@@ -520,6 +520,50 @@ def main():
         fig.update_xaxes(automargin=True, range=(-0.5, 1.5))
         st.plotly_chart(fig)
 
+    # function for saving new runtimes to class_runtimes log
+    def save_class_runtime(runtime):
+        try:
+            runtimes = pd.read_csv("runtime_logs/class_runtimes.csv", header=None, index_col=False)
+            # taking column 0 of runtimes as a Series and converting to list
+            runtimes = runtimes[0].tolist()
+        except:
+            runtimes = []
+            
+        # adding new runtime value to list
+        runtimes.append(runtime)
+        runtimes = pd.Series(runtimes)
+        runtimes.to_csv(path_or_buf='runtime_logs/class_runtimes.csv', index=False, header=False)
+
+    # function for saving new runtimes to class_runtimes log
+    def save_pred_runtime(runtime):
+        try:
+            runtimes = pd.read_csv("runtime_logs/pred_runtimes.csv", header=None, index_col=False)
+            # taking column 0 of runtimes as a Series and converting to list
+            runtimes = runtimes[0].tolist()
+        except:
+            runtimes = []
+        # adding new runtime value to list
+        runtimes.append(runtime)
+        runtimes = pd.Series(runtimes)
+        runtimes.to_csv(path_or_buf='runtime_logs/pred_runtimes.csv', index=False, header=False)
+
+    # function for loading times from runtime log
+    def avg_runtime(model='class'):
+        if model == 'class':
+            try:
+                runtimes = pd.read_csv("runtime_logs/class_runtimes.csv", header=None)
+                avg_runtime = runtimes.mean()[0]
+            except:
+                avg_runtime = 0
+        else:
+            try:
+                runtimes = pd.read_csv("runtime_logs/pred_runtimes.csv", header=None)
+                avg_runtime = runtimes.mean()[0]
+            except:
+                avg_runtime = 0
+        
+        return avg_runtime
+
     df = load_data()
 
     st.sidebar.title("Model")
@@ -583,6 +627,8 @@ def main():
     if option == "Model":
         model = st.sidebar.radio("Model type:", ("Classification", "Prediction"), key="model")
         if model == "Classification":
+            rt_avg = avg_runtime()
+            
             # multiselect for model results visualization options for the xgboost model
             metrics = st.sidebar.multiselect("Classifier Visualization:", (
                 'Calibration Curve', 'Confusion Matrix', 'Precision-Recall Curve', 'Feature Importances',
@@ -606,7 +652,11 @@ def main():
                 st.write("hyperparameters:")
                 st.text(best_params)
                 toc = time.perf_counter()
-                st.write(f"Runtime: {toc - tic:0.4f}s")
+                rt = (toc - tic)
+                save_class_runtime(rt)
+                st.write(f"Runtime: {rt:0.4f}s")
+                rt_avg = avg_runtime()
+            st.sidebar.write(f"runtime avg: {rt_avg:0.4f}")
                 
         if model == "Prediction":
             # tic = time.perf_counter()
@@ -620,6 +670,8 @@ def main():
             # toc = time.perf_counter()
             # st.write(f"Runtime: {toc - tic:0.4f}s")
             if mode == "model performance":
+                rt_avg = avg_runtime('pred')
+                
                 metrics = st.sidebar.multiselect("Predictor Performance:", (
                     'Confusion Matrix', 'Precision-Recall Curve', 'Prediction Distribution', 'Calibration Curve'),
                                                  key="lr_metric")
@@ -641,7 +693,11 @@ def main():
                     st.write("hyperparameters:")
                     st.text(lr_best_params)
                     toc = time.perf_counter()
-                    st.write(f"Runtime: {toc - tic:0.4f}s")
+                    rt = (toc - tic)
+                    save_pred_runtime(rt)
+                    st.write(f"Runtime: {rt:0.4f}s")
+                    rt_avg = avg_runtime('pred')
+                st.sidebar.write(f"runtime avg: {rt_avg:0.4f}")
 
             if mode == "disease probability":
                 st.subheader('Cardiovascular Disease Probability Prediction')
