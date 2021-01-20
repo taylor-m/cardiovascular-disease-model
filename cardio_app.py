@@ -241,11 +241,11 @@ def main():
         # grid search values other than optimal hyperparameters removed to lower notebook run time
         # fmt: off
         grid = {
-            "model__n_estimators": np.arange(1, 3),
-            "model__learning_rate": np.arange(0, 50, 10),
+            "model__n_estimators": [1],
+            "model__learning_rate": [10, 30],
             #     "model__subsample": [],
-            "model__colsample_bytree": np.arange(0.7, 1, 0.1),
-            "model__max_depth": np.arange(4, 7),
+            "model__colsample_bytree": [0.8, 0.9, 1.0],
+            "model__max_depth": [4, 5, 6],
         }
         # fmt: on
         pipeline_cv = GridSearchCV(pipeline, grid, cv=2, verbose=2, n_jobs=4)
